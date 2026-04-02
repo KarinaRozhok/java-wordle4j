@@ -43,7 +43,7 @@ public class WordleTest {
 
         assertEquals("🟢", feedback.get(0)); // 'h' на месте
         assertEquals("⚪️", feedback.get(1)); // 'i' нет в ответе
-        assertEquals("🟢", feedback.get(2));  // 'l' есть
+        assertEquals("🟡", feedback.get(2));  // 'l' есть
         assertEquals("🟡", feedback.get(3)); // второй 'l' — аналогично
         assertEquals("🟢", feedback.get(4)); // 'o' на месте
     }

@@ -30,20 +30,21 @@ public class WordleGame {
             System.out.printf("Подсказка: загаданное слово состоит из %d букв.%n", normalizedAnswer.length());
             return new ArrayList<>();
         }
+
         List<String> feedback = new ArrayList<>();
         for (int i = 0; i < userWord.length(); i++) {
             feedback.add("⚪️");
         }
-        Map<Character, Integer> answerLetterCount = new HashMap<>();
 
+        Map<Character, Integer> answerLetterCount = new HashMap<>();
         for (char c : normalizedAnswer.toCharArray()) {
             answerLetterCount.put(c, answerLetterCount.getOrDefault(c, 0) + 1);
         }
 
-        Map<Character, Integer> totalAnswerCount = new HashMap<>();
-        for (char c : normalizedAnswer.toCharArray()) {
-            totalAnswerCount.put(c, totalAnswerCount.getOrDefault(c, 0) + 1);
-        }
+        System.out.println("answerLetterCount: " + answerLetterCount); 
+
+        Map<Character, Integer> totalAnswerCount = new HashMap<>(answerLetterCount);
+        System.out.println("totalAnswerCount: " + totalAnswerCount);
 
         for (int i = 0; i < userWord.length(); i++) {
             char userChar = userWord.charAt(i);
@@ -52,26 +53,34 @@ public class WordleGame {
             if (userChar == answerChar) {
                 feedback.set(i, "🟢");
                 totalAnswerCount.put(userChar, totalAnswerCount.get(userChar) - 1);
+                System.out.printf("Позиция %d: '%c' == '%c', ставим '🟢', обновляем totalAnswerCount: %s%n", i, userChar, answerChar, totalAnswerCount);
             }
         }
 
         Map<Character, Integer> remainingLetters = new HashMap<>(totalAnswerCount);
+        System.out.println("remainingLetters (после точных совпадений): " + remainingLetters);
 
         for (int i = 0; i < userWord.length(); i++) {
             if ("🟢".equals(feedback.get(i))) continue;
 
             char userChar = userWord.charAt(i);
 
+            System.out.printf("Проверяем позицию %d, буква '%c'%n", i, userChar);
+
             if (remainingLetters.containsKey(userChar) && remainingLetters.get(userChar) > 0) {
                 feedback.set(i, "🟡");
-                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1); // Расходуем букву
+                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1);
+                System.out.printf("  → Буква найдена в оставшихся, ставим '🟡', обновляем remainingLetters: %s%n", remainingLetters);
             } else {
                 feedback.set(i, "⚪️");
+                System.out.printf("  → Буквы '%c' нет в оставшихся, ставим '⚪️'%n", userChar);
             }
         }
 
+        System.out.println("Итоговый feedback: " + feedback);
         return feedback;
     }
+
 
     public String getUserInput() {
         Scanner scanner = new Scanner(System.in);
