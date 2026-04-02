@@ -40,22 +40,28 @@ public class WordleGame {
             answerLetterCount.put(c, answerLetterCount.getOrDefault(c, 0) + 1);
         }
 
+        Map<Character, Integer> totalAnswerCount = new HashMap<>();
+        for (char c : normalizedAnswer.toCharArray()) {
+            totalAnswerCount.put(c, totalAnswerCount.getOrDefault(c, 0) + 1);
+        }
         for (int i = 0; i < userWord.length(); i++) {
             char userChar = userWord.charAt(i);
             char answerChar = normalizedAnswer.charAt(i);
 
             if (userChar == answerChar) {
                 feedback.set(i, "🟢");
-                answerLetterCount.put(userChar, answerLetterCount.get(userChar) - 1);
+                totalAnswerCount.put(userChar, totalAnswerCount.get(userChar) - 1);
             }
         }
+        Map<Character, Integer> remainingLetters = new HashMap<>(totalAnswerCount);
+
         for (int i = 0; i < userWord.length(); i++) {
             if ("🟢".equals(feedback.get(i))) continue; // Пропускаем уже отмеченные 🟢
 
             char userChar = userWord.charAt(i);
-            if (answerLetterCount.containsKey(userChar) && answerLetterCount.get(userChar) > 0) {
+            if (remainingLetters.containsKey(userChar) && remainingLetters.get(userChar) > 0) {
                 feedback.set(i, "🟡");
-                answerLetterCount.put(userChar, answerLetterCount.get(userChar) - 1); // Важно! Уменьшаем счётчик
+                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1); // Уменьшаем счётчик оставшихся букв
             } else {
                 feedback.set(i, "⚪️"); // Если буква отсутствует или уже использована
             }
