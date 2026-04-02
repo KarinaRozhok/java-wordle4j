@@ -49,16 +49,15 @@ public class WordleGame {
                 answerLetterCount.put(userChar, answerLetterCount.get(userChar) - 1);
             }
         }
-
         for (int i = 0; i < userWord.length(); i++) {
-            if ("🟢".equals(feedback.get(i))) continue;
+            if ("🟢".equals(feedback.get(i))) continue; // Пропускаем уже отмеченные 🟢
 
             char userChar = userWord.charAt(i);
             if (answerLetterCount.containsKey(userChar) && answerLetterCount.get(userChar) > 0) {
                 feedback.set(i, "🟡");
-                answerLetterCount.put(userChar, answerLetterCount.get(userChar) - 1);
+                answerLetterCount.put(userChar, answerLetterCount.get(userChar) - 1); // Важно! Уменьшаем счётчик
             } else {
-                feedback.set(i, "⚪️");
+                feedback.set(i, "⚪️"); // Если буква отсутствует или уже использована
             }
         }
 
