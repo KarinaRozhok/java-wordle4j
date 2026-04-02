@@ -41,8 +41,7 @@ public class WordleGame {
             answerLetterCount.put(c, answerLetterCount.getOrDefault(c, 0) + 1);
         }
 
-        System.out.println("answerLetterCount: " + answerLetterCount); 
-
+        System.out.println("answerLetterCount: " + answerLetterCount);
         Map<Character, Integer> totalAnswerCount = new HashMap<>(answerLetterCount);
         System.out.println("totalAnswerCount: " + totalAnswerCount);
 
