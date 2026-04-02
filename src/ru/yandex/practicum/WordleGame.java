@@ -44,6 +44,7 @@ public class WordleGame {
         for (char c : normalizedAnswer.toCharArray()) {
             totalAnswerCount.put(c, totalAnswerCount.getOrDefault(c, 0) + 1);
         }
+
         for (int i = 0; i < userWord.length(); i++) {
             char userChar = userWord.charAt(i);
             char answerChar = normalizedAnswer.charAt(i);
@@ -53,17 +54,19 @@ public class WordleGame {
                 totalAnswerCount.put(userChar, totalAnswerCount.get(userChar) - 1);
             }
         }
+
         Map<Character, Integer> remainingLetters = new HashMap<>(totalAnswerCount);
 
         for (int i = 0; i < userWord.length(); i++) {
-            if ("🟢".equals(feedback.get(i))) continue; // Пропускаем уже отмеченные 🟢
+            if ("🟢".equals(feedback.get(i))) continue;
 
             char userChar = userWord.charAt(i);
+
             if (remainingLetters.containsKey(userChar) && remainingLetters.get(userChar) > 0) {
                 feedback.set(i, "🟡");
-                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1); // Уменьшаем счётчик оставшихся букв
+                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1); // Расходуем букву
             } else {
-                feedback.set(i, "⚪️"); // Если буква отсутствует или уже использована
+                feedback.set(i, "⚪️");
             }
         }
 
