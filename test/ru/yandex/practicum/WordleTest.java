@@ -20,7 +20,6 @@ public class WordleTest {
         game = new WordleGame(dictionary, log);
     }
 
-
     @Test
     public void testAnalyzeWordExactMatch() {
         String correctAnswer = "test";
@@ -33,19 +32,18 @@ public class WordleTest {
         }
     }
 
-
     @Test
     public void testAnalyzeWordPartialMatch() {
         String correctAnswer = "hello";
         game.setAnswer(correctAnswer);
 
-        List<String> feedback = game.analyzeWord("hillo");
+        List<String> feedback = game.analyzeWord("oillh");
 
-        assertEquals("🟢", feedback.get(0)); // 'h' на месте
+        assertEquals("🟡", feedback.get(0)); // 'h' на месте
         assertEquals("⚪️", feedback.get(1)); // 'i' нет в ответе
-        assertEquals("🟡", feedback.get(2));  // 'l' есть
-        assertEquals("🟡", feedback.get(3)); // второй 'l' — аналогично
-        assertEquals("🟢", feedback.get(4)); // 'o' на месте
+        assertEquals("🟢", feedback.get(2));  // 'l' есть
+        assertEquals("🟢", feedback.get(3)); // второй 'l' — аналогично
+        assertEquals("🟡", feedback.get(4)); // 'o' на месте
     }
 
     @Test
