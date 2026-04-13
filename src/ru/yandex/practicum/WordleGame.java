@@ -85,6 +85,7 @@ public class WordleGame {
         }
         return feedback;
     }
+
     public void printHints() {
         System.out.println("Подсказки:");
 
