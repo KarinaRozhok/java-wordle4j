@@ -1,9 +1,6 @@
 package ru.yandex.practicum;
-
 import java.util.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.io.PrintWriter;
 
 public class WordleGame {
@@ -11,10 +8,11 @@ public class WordleGame {
     private String answer;
     private WordleDictionary dictionary;
     private final PrintWriter log;
+    private static final String RUSSIAN_ALPHABET = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
 
-    private Set<Character> lettersAbsent = new HashSet<>();  // буквы, которых нет в загаданном слове
-    private Set<Character> lettersPresent = new HashSet<>(); // буквы, которые есть в загаданном слове, но не на своих местах
-    private int correctPositionsCount = 0; // Вместо List<Character>
+    private Set<Character> lettersAbsent = new HashSet<>();
+    private Set<Character> lettersPresent = new HashSet<>();
+    private int correctPositionsCount = 0;
 
 
     public WordleGame(WordleDictionary dictionary, PrintWriter log) {
@@ -26,65 +24,81 @@ public class WordleGame {
         this.answer = answer;
     }
 
-    public List<String> analyzeWord(String userWord) {
-        userWord = normalizeWord(userWord);
-        String normalizedAnswer = normalizeWord(answer);
+    public List<String> analyzeWord(String guess) {
+        List<String> feedback = new ArrayList<>();
+        printHints();
+        String answer = this.answer;
+        correctPositionsCount = 0;
 
-
-        if (!dictionary.contains(userWord)) {
-            throw new WordleInputException("Слово '" + userWord + "' отсутствует в словаре!");
-        } else if (userWord.length() != normalizedAnswer.length()) {
-            throw new WordleInputException("Ошибка: длина вашего слова не совпадает с длиной загаданного слова.");
+        if (guess.length() != answer.length()) {
+            throw new IllegalArgumentException("Длина предполагаемого слова должна совпадать с длиной загаданного слова");
         }
 
-        List<String> feedback = new ArrayList<>(Collections.nCopies(userWord.length(), "⚪️")); // Инициализируем один раз
-        Map<Character, Integer> remainingLetters = new HashMap<>();
-
-        for (char c : normalizedAnswer.toCharArray()) {
-            remainingLetters.put(c, remainingLetters.getOrDefault(c, 0) + 1);
-        }
-        Map<Character, Integer> availableLetters = new HashMap<>(remainingLetters);
-
-        for (int i = 0; i < userWord.length(); i++) {
-            char userChar = userWord.charAt(i);
-            if ("🟢".equals(feedback.get(i))) continue; // Пропускаем уже угаданные
-
-            if (availableLetters.containsKey(userChar) && availableLetters.get(userChar) > 0) {
-                feedback.set(i, "🟡");
-                availableLetters.put(userChar, availableLetters.get(userChar) - 1);
-                lettersPresent.add(userChar);
-            } else {
-                feedback.set(i, "⚪️");
-                lettersAbsent.add(userChar);
+        int[] answerCharCount = new int[33];
+        for (char c : answer.toCharArray()) {
+            int index = RUSSIAN_ALPHABET.indexOf(c);
+            if (index >= 0) {
+                answerCharCount[index]++;
             }
         }
 
-        for (int i = 0; i < userWord.length(); i++) {
-            char userChar = userWord.charAt(i);
-            char answerChar = normalizedAnswer.charAt(i);
+        for (int i = 0; i < answerCharCount.length; i++) {
+            if (answerCharCount[i] > 0) {
+                char c = RUSSIAN_ALPHABET.charAt(i);
+                System.out.println("  '" + c + "': " + answerCharCount[i]);
+            }
+        }
 
-            if (userChar == answerChar) {
-                feedback.set(i, "🟢");
-                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1);
+        boolean[] usedPositions = new boolean[answer.length()];
+
+        for (int i = 0; i < answer.length(); i++) {
+            char guessChar = guess.charAt(i);
+            char answerChar = answer.charAt(i);
+
+            if (guessChar == answerChar) {
+                feedback.add("🟢");
+                usedPositions[i] = true;
+                int charIndex = RUSSIAN_ALPHABET.indexOf(guessChar);
+                if (charIndex >= 0) answerCharCount[charIndex]--;
                 correctPositionsCount++;
-            }
-        }
-
-        for (int i = 0; i < userWord.length(); i++) {
-            char userChar = userWord.charAt(i);
-            if ("🟢".equals(feedback.get(i))) continue; // Пропускаем уже угаданные
-
-            if (remainingLetters.containsKey(userChar) && remainingLetters.get(userChar) > 0) {
-                feedback.set(i, "🟡");
-                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1);
-                lettersPresent.add(userChar);
             } else {
-                feedback.set(i, "⚪️");
-                lettersAbsent.add(userChar);
+                feedback.add(null);
             }
         }
+
+        for (int i = 0; i < guess.length(); i++) {
+            if (feedback.get(i) == null) {
+                char guessChar = guess.charAt(i);
+                int charIndex = RUSSIAN_ALPHABET.indexOf(guessChar);
+
+                if (charIndex >= 0 && answerCharCount[charIndex] > 0) {
+                    feedback.set(i, "🟡");
+                    answerCharCount[charIndex]--;
+                } else {
+                    feedback.set(i, "⚪️");
+                }
+            }
+        }
+
+        for (int i = 0; i < feedback.size(); i++) {
+            String marker = feedback.get(i);
+            char guessedChar = guess.charAt(i);
+
+            switch (marker) {
+                case "⚪️":
+                    lettersAbsent.add(guessedChar);
+                    break;
+                case "🟡":
+                    lettersPresent.add(guessedChar);
+                    break;
+                case "🟢":
+                    break;
+            }
+        }
+
         return feedback;
     }
+
 
     public void printHints() {
         System.out.println("Подсказки:");
@@ -116,9 +130,17 @@ public class WordleGame {
 
     public String getUserInput() {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Введите ваше слово:");
-        return scanner.nextLine();
+        String input;
+        do {
+            System.out.println("Введите ваше слово:");
+            input = scanner.nextLine().trim();
+            if (input.isEmpty()) {
+                System.out.println("Слово не может быть пустым! Попробуйте ещё раз.");
+            }
+        } while (input.isEmpty());
+        return input;
     }
+
 
     public void printFeedback(List<String> feedback) {
         System.out.println("Результат проверки:");

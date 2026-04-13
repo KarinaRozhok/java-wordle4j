@@ -14,8 +14,15 @@ public class WordleDictionary {
     }
 
     public WordleDictionary(List<String> words, PrintWriter log) {
-        this.words = words;
+        this.words = new ArrayList<>();
+        for (String word : words) {
+            this.words.add(normalizeWord(word));
+        }
         this.log = log;
+    }
+
+    private String normalizeWord(String word) {
+        return word.toLowerCase().replace('ё', 'е');
     }
 
     public List<String> getWords() {
