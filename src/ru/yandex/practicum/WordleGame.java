@@ -12,6 +12,11 @@ public class WordleGame {
     private WordleDictionary dictionary;
     private final PrintWriter log;
 
+    private Set<Character> lettersAbsent = new HashSet<>();  // буквы, которых нет в загаданном слове
+    private Set<Character> lettersPresent = new HashSet<>(); // буквы, которые есть в загаданном слове, но не на своих местах
+    private int correctPositionsCount = 0; // Вместо List<Character>
+
+
     public WordleGame(WordleDictionary dictionary, PrintWriter log) {
         this.dictionary = dictionary;
         this.log = log;
@@ -25,17 +30,33 @@ public class WordleGame {
         userWord = normalizeWord(userWord);
         String normalizedAnswer = normalizeWord(answer);
 
-        if (userWord.length() != normalizedAnswer.length()) {
-            System.out.println("Ошибка: длина вашего слова не совпадает с длиной загаданного слова.");
-            System.out.printf("Подсказка: загаданное слово состоит из %d букв.%n", normalizedAnswer.length());
-            return new ArrayList<>();
+
+        if (!dictionary.contains(userWord)) {
+            throw new WordleInputException("Слово '" + userWord + "' отсутствует в словаре!");
+        } else if (userWord.length() != normalizedAnswer.length()) {
+            throw new WordleInputException("Ошибка: длина вашего слова не совпадает с длиной загаданного слова.");
         }
 
-        List<String> feedback = new ArrayList<>(); // Инициализируем один раз
+        List<String> feedback = new ArrayList<>(Collections.nCopies(userWord.length(), "⚪️")); // Инициализируем один раз
         Map<Character, Integer> remainingLetters = new HashMap<>();
 
         for (char c : normalizedAnswer.toCharArray()) {
             remainingLetters.put(c, remainingLetters.getOrDefault(c, 0) + 1);
+        }
+        Map<Character, Integer> availableLetters = new HashMap<>(remainingLetters);
+
+        for (int i = 0; i < userWord.length(); i++) {
+            char userChar = userWord.charAt(i);
+            if ("🟢".equals(feedback.get(i))) continue; // Пропускаем уже угаданные
+
+            if (availableLetters.containsKey(userChar) && availableLetters.get(userChar) > 0) {
+                feedback.set(i, "🟡");
+                availableLetters.put(userChar, availableLetters.get(userChar) - 1);
+                lettersPresent.add(userChar);
+            } else {
+                feedback.set(i, "⚪️");
+                lettersAbsent.add(userChar);
+            }
         }
 
         for (int i = 0; i < userWord.length(); i++) {
@@ -43,18 +64,53 @@ public class WordleGame {
             char answerChar = normalizedAnswer.charAt(i);
 
             if (userChar == answerChar) {
-                feedback.add("🟢"); // Точное совпадение
+                feedback.set(i, "🟢");
                 remainingLetters.put(userChar, remainingLetters.get(userChar) - 1);
-            } else if (remainingLetters.containsKey(userChar) && remainingLetters.get(userChar) > 0) {
-                feedback.add("🟡"); // Есть буква в оставшихся
-                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1);
-            } else {
-                feedback.add("⚪️"); // Буква не найдена
+                correctPositionsCount++;
             }
         }
 
-        System.out.println("Итоговый feedback: " + feedback);
+        for (int i = 0; i < userWord.length(); i++) {
+            char userChar = userWord.charAt(i);
+            if ("🟢".equals(feedback.get(i))) continue; // Пропускаем уже угаданные
+
+            if (remainingLetters.containsKey(userChar) && remainingLetters.get(userChar) > 0) {
+                feedback.set(i, "🟡");
+                remainingLetters.put(userChar, remainingLetters.get(userChar) - 1);
+                lettersPresent.add(userChar);
+            } else {
+                feedback.set(i, "⚪️");
+                lettersAbsent.add(userChar);
+            }
+        }
         return feedback;
+    }
+    public void printHints() {
+        System.out.println("Подсказки:");
+
+        if (!lettersAbsent.isEmpty()) {
+            System.out.print("Буквы, которых нет в загаданном слове: ");
+            for (char letter : lettersAbsent) {
+                System.out.print(letter + " ");
+            }
+            System.out.println();
+        } else {
+            System.out.println("Все введенные вами буквы есть в загаданном слове.");
+        }
+
+        int incorrectPositionsCount = lettersPresent.size();
+        if (incorrectPositionsCount > 0) {
+            System.out.printf("Количество букв, которые есть в слове, но на неверных позициях: %d%n", incorrectPositionsCount);
+        } else {
+            System.out.println("Нет букв, которые были бы в слове, но стояли бы на неверных позициях.");
+        }
+
+        if (correctPositionsCount > 0) {
+            System.out.printf("Количество букв на правильных позициях: %d%n", correctPositionsCount);
+        } else {
+            System.out.println("Пока нет букв на правильных позициях.");
+        }
+
     }
 
     public String getUserInput() {
@@ -76,17 +132,25 @@ public class WordleGame {
     }
 
     public void startGame() {
+        correctPositionsCount = 0;
+
         log.println("Игра начата");
         answer = selectRandomWordFromDictionary();
         log.printf("Загадано слово: '%s'%n", answer);
 
+        lettersAbsent.clear();
+        lettersPresent.clear();
+
         int attemptsLeft = MAX_ATTEMPTS;
+
         while (attemptsLeft > 0) {
             String userWord = getUserInput();
             log.printf("Ход игрока: '%s' (осталось попыток: %d)%n", userWord, attemptsLeft);
             List<String> feedback = analyzeWord(userWord);
             log.println("Результат анализа: " + feedback);
             printFeedback(feedback);
+
+            printHints();
 
             if (isWordGuessed(userWord)) {
                 System.out.println("Поздравляем, вы угадали слово!");

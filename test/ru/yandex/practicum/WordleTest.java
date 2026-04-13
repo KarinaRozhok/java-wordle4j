@@ -15,6 +15,9 @@ public class WordleTest {
     @BeforeEach
     public void setUp() {
         List<String> words = new ArrayList<>();
+        words.add("test");  // Добавляем слово "test"
+        words.add("hello"); // Добавляем слово "hello"
+        words.add("world"); // Добавляем слово "world"
         PrintWriter log = new PrintWriter(System.out);
         WordleDictionary dictionary = new WordleDictionary(words, log);
         game = new WordleGame(dictionary, log);
@@ -50,7 +53,7 @@ public class WordleTest {
     public void testAnalyzeWordNoMatch() {
         String correctAnswer = "world";
         game.setAnswer(correctAnswer);
-        List<String> feedback = game.analyzeWord("test"); // теперь List<String>
+        List<String> feedback = game.analyzeWord("test");
 
         for (String mark : feedback) {
             assertEquals("⚪️", mark);
